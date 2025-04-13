@@ -4,6 +4,8 @@ from torchvision import models, transforms
 import torch
 import torch.nn.functional as F
 
+from cleanup import cleanup_image
+
 
 model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
 model = torch.nn.Sequential(*(list(model.children())[:-1]))  # Remove final classifier
@@ -21,37 +23,8 @@ transform = transforms.Compose(
 )
 
 
-def preprocess_image(image_path: Path, output_size=(256, 256)):
-    img = Image.open(image_path).convert("RGBA")  # Ensure RGBA mode
-
-    # Create a white background image with the desired output size
-    white_bg = Image.new("RGBA", output_size, (255, 255, 255, 255))
-
-    # Scale the image while maintaining aspect ratio
-    img.thumbnail(output_size, Image.Resampling.LANCZOS)
-
-    # Calculate position to center the image
-    x_offset = (output_size[0] - img.size[0]) // 2
-    y_offset = (output_size[1] - img.size[1]) // 2
-
-    # Paste the scaled image onto the white background
-    white_bg.paste(img, (x_offset, y_offset), img)
-
-    # Convert back to RGB (remove alpha channel)
-    img_rgb = white_bg.convert("RGB")
-
-    file_name = str(image_path).split("/")[-1]
-
-    print("preprocessing image:", file_name)
-
-    Path("tmp").mkdir(parents=True, exist_ok=True)
-    img_rgb.save(f"tmp/{file_name}")
-
-    return img_rgb
-
-
 def get_embedding(image_path):
-    img = preprocess_image(image_path, output_size=(224, 224))
+    img = cleanup_image(image_path, output_size=(224, 224))
     tensor = transform(img).unsqueeze(0)
     with torch.no_grad():
         embedding = model(tensor).view(-1)  # insead of .squeeze() to flatten input
