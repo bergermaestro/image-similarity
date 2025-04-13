@@ -3,6 +3,7 @@ import compare_images
 from pathlib import Path
 import matplotlib.pyplot as plt
 from collections import defaultdict
+import split_logos
 
 
 def import_folder(folder_path):
@@ -20,15 +21,13 @@ def import_folder(folder_path):
     return image_paths
 
 
-def compute_scores_by_group(logos, test_image, method="ssim"):
-    grouped_scores = defaultdict(list)
-
+def compute_scores(logos, test_image, method="ssim"):
+    scores = []
     for logo in logos:
-        group_name = Path(logo).parts[1]
         score = compare_images.resnet_similarity(logo, test_image)
-        grouped_scores[group_name].append((score, logo))
+        scores.append((score, logo))
 
-    return grouped_scores
+    return scores
 
 
 def plot_grouped_scores(grouped_scores):
@@ -49,6 +48,7 @@ def plot_grouped_scores(grouped_scores):
 
 
 def main():
+    REFERENCE_IMAGE = "logos/canada/canada_1.png"
     logo_dirs = [
         "augmented_canada_logos",
         "american_airlines",
@@ -63,9 +63,18 @@ def main():
 
     print(f"Found {len(logos)} logos in the directories.")
 
-    test_image = "logos/canada/canada_1.png"
+    logos_split = []
+    for logo in logos:
+        s_logos, _ = split_logos.split_logos_from_file(logo)
+        logos_split.extend(s_logos)
 
-    grouped_scores = compute_scores_by_group(logos, test_image, method="ssim")
+    print(f"Found {len(logos_split)} logos after splitting.")
+
+    grouped_scores = defaultdict(list)
+    for logo in logos_split:
+        group_name = logo.parent.name
+        score = compare_images.resnet_similarity(logo, REFERENCE_IMAGE)
+        grouped_scores[group_name].append((score, logo))
 
     plot_grouped_scores(grouped_scores)
 
