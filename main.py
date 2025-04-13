@@ -1,3 +1,4 @@
+from tokenize import group
 import compare_images
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -20,29 +21,12 @@ def import_folder(folder_path):
 
 
 def compute_scores_by_group(logos, test_image, method="ssim"):
-    """
-    Compute similarity scores grouped by top-level folder using the specified matching method.
-    Supported methods: "ssim", "orb", "hash", "resnet".
-    """
     grouped_scores = defaultdict(list)
 
     for logo in logos:
         group_name = Path(logo).parts[1]
-
         score = compare_images.resnet_similarity(logo, test_image)
-
-        # if method == "ssim":
-        #     score = compare_images.compute_ssim(logo, test_image)
-        # elif method == "orb":
-        #     score = compare_images.match_images(logo, test_image)
-        # elif method == "hash":
-        #     score = compare_images.compare_hashes(logo, test_image)
-        # elif method == "resnet":
-        #     score = compare_images.resnet_similarity(logo, test_image)
-        # else:
-        #     raise ValueError(f"Unknown method: {method}")
-
-        grouped_scores[group_name].append(score)
+        grouped_scores[group_name].append((score, logo))
 
     return grouped_scores
 
@@ -54,7 +38,8 @@ def plot_grouped_scores(grouped_scores):
     plt.figure(figsize=(10, 6))
 
     for group_name, scores in grouped_scores.items():
-        plt.hist(scores, bins=20, alpha=0.6, label=group_name)
+        only_scores = [score for score, _ in scores]
+        plt.hist(only_scores, bins=20, alpha=0.6, label=group_name)
 
     plt.xlabel("SSIM Score")
     plt.ylabel("Frequency")
@@ -64,7 +49,13 @@ def plot_grouped_scores(grouped_scores):
 
 
 def main():
-    logo_dirs = ["augmented_canada_logos", "american_airlines", "Dollar Tree", "Durea"]
+    logo_dirs = [
+        "augmented_canada_logos",
+        "american_airlines",
+        "Durea",
+        "Embraer",
+        "Esso",
+    ]
     # logo_dirs = ["augmented_canada_logos", "american_airlines"]
     logos = []
     for logo_dir in logo_dirs:
@@ -74,13 +65,29 @@ def main():
 
     test_image = "logos/canada/canada_1.png"
 
-    # methods = ["ssim", "orb", "hash", "resnet"]
-    methods = ["resnet"]
+    grouped_scores = compute_scores_by_group(logos, test_image, method="ssim")
 
-    for method in methods:
-        print(f"\n=== {method.upper()} Results ===")
-        grouped_scores = compute_scores_by_group(logos, test_image, method=method)
-        plot_grouped_scores(grouped_scores)
+    plot_grouped_scores(grouped_scores)
+
+    # Sort scores within each group
+    canada_scores = grouped_scores["augmented_canada_logos"]
+    other_scores = [
+        pair
+        for group, scores in grouped_scores.items()
+        if group != "augmented_canada_logos"
+        for pair in scores
+    ]
+
+    bottom_5_canada = sorted(canada_scores, key=lambda x: x[0])[:5]
+    top_5_others = sorted(other_scores, key=lambda x: x[0], reverse=True)[:5]
+
+    print("Bottom 5 matches in 'augmented_canada_logos':")
+    for score, path in bottom_5_canada:
+        print(f"{path}: {score:.4f}")
+
+    print("Top 5 matches in other folders:")
+    for score, path in top_5_others:
+        print(f"{path}: {score:.4f}")
 
 
 if __name__ == "__main__":
