@@ -1,10 +1,11 @@
 import os
+from pathlib import Path
 import random
 from PIL import Image
 import numpy as np
 
 # Directory to save augmented images
-AUGMENTED_DIR = "augmented_canada_logos"
+AUGMENTED_DIR = "logos/augmented_canada_logos"
 if not os.path.exists(AUGMENTED_DIR):
     os.makedirs(AUGMENTED_DIR)
 
@@ -51,8 +52,16 @@ def add_compression_artifacts(img, quality=50):
 # Function to apply all augmentations and save the images
 def augment_images(image_paths, num_augmentations=5):
     for image_path in image_paths:
-        img = Image.open(image_path)
-        img_name = os.path.basename(image_path)
+        img = Image.open(image_path).convert("RGBA")  # Ensure image is in RGBA mode
+        img_name = Path(image_path).stem
+
+        # Preprocess: Place image on a white background if it has transparency
+        if img.mode == "RGBA":
+            white_bg = Image.new("RGBA", img.size, (255, 255, 255, 255))
+            img = Image.alpha_composite(white_bg, img).convert("RGB")
+
+        # Save the unaugmented version
+        img.save(os.path.join(AUGMENTED_DIR, f"{img_name}_original.png"))
 
         # Apply augmentations
         for i in range(num_augmentations):

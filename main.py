@@ -22,23 +22,25 @@ def import_folder(folder_path):
 def compute_scores_by_group(logos, test_image, method="ssim"):
     """
     Compute similarity scores grouped by top-level folder using the specified matching method.
-    Supported methods: "ssim", "orb", "hash"
+    Supported methods: "ssim", "orb", "hash", "resnet".
     """
     grouped_scores = defaultdict(list)
 
     for logo in logos:
         group_name = Path(logo).parts[1]
 
-        if method == "ssim":
-            score = compare_images.compute_ssim(logo, test_image)
-        elif method == "orb":
-            score = compare_images.match_images(logo, test_image)
-        elif method == "hash":
-            score = compare_images.compare_hashes(logo, test_image)
-        elif method == "resnet":
-            score = compare_images.resnet_similarity(logo, test_image)
-        else:
-            raise ValueError(f"Unknown method: {method}")
+        score = compare_images.resnet_similarity(logo, test_image)
+
+        # if method == "ssim":
+        #     score = compare_images.compute_ssim(logo, test_image)
+        # elif method == "orb":
+        #     score = compare_images.match_images(logo, test_image)
+        # elif method == "hash":
+        #     score = compare_images.compare_hashes(logo, test_image)
+        # elif method == "resnet":
+        #     score = compare_images.resnet_similarity(logo, test_image)
+        # else:
+        #     raise ValueError(f"Unknown method: {method}")
 
         grouped_scores[group_name].append(score)
 
@@ -63,9 +65,12 @@ def plot_grouped_scores(grouped_scores):
 
 def main():
     logo_dirs = ["augmented_canada_logos", "american_airlines", "Dollar Tree", "Durea"]
+    # logo_dirs = ["augmented_canada_logos", "american_airlines"]
     logos = []
     for logo_dir in logo_dirs:
-        logos.extend(import_folder(logo_dir))
+        logos.extend(import_folder(Path("logos") / logo_dir))
+
+    print(f"Found {len(logos)} logos in the directories.")
 
     test_image = "logos/canada/canada_1.png"
 
