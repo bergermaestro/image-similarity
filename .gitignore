@@ -1,0 +1,7 @@
+venv
+.DS_Store
+.vscode
+!.vscode/settings.json
+.idea
+__pycache__
+logos
