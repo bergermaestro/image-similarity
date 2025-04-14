@@ -1,9 +1,11 @@
 from pathlib import Path
+from typing import List
 import cv2
 import random
 
 from cleanup import cleanup_image
-from utils import pil_to_cv2
+from utils import load_image
+from cv2.typing import MatLike, Rect
 
 CONTOUR_THRESHOLD = 1000
 DILATE_ITERATIONS = 2
@@ -12,11 +14,7 @@ DILATE_ITERATIONS = 2
 # DILATE_ITERATIONS = 2
 
 
-def preprocess_image(image_path):
-    cleaned_image = cleanup_image(image_path, output_size=(256, 256))
-
-    image = pil_to_cv2(cleaned_image)
-
+def get_image_binary(image: MatLike):
     # image = cv2.imread(image_path)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -28,10 +26,10 @@ def preprocess_image(image_path):
     # cleaned = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
     dilated = cv2.dilate(thresh, kernel, iterations=DILATE_ITERATIONS)
 
-    return image, dilated
+    return dilated
 
 
-def extract_logo_bounding_boxes(binary_image):
+def extract_logo_bounding_boxes(binary_image: MatLike):
     contours, _ = cv2.findContours(
         binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
     )
@@ -43,16 +41,18 @@ def extract_logo_bounding_boxes(binary_image):
     return boxes
 
 
-def crop_logos(image, boxes):
-    logos = []
+def crop_logos(image: MatLike, boxes: List[Rect]) -> list[MatLike]:
+    logos: List[MatLike] = []
     for x, y, w, h in boxes:
         logo = image[y : y + h, x : x + w]
         logos.append(logo)
     return logos
 
 
-def split_logos_from_file(image_path, draw_boxes=False):
-    image, binary = preprocess_image(image_path)
+def split_logo(
+    image: MatLike, draw_boxes=False
+) -> tuple[list[MatLike], MatLike | None]:
+    binary = get_image_binary(image)
     boxes = extract_logo_bounding_boxes(binary)
     logos = crop_logos(image, boxes)
 
@@ -84,11 +84,13 @@ def main():
             file.rmdir()
 
     for logo_path in logo_files:
-        logos, boxed_image = split_logos_from_file(logo_path, draw_boxes=True)
+        logo = load_image(logo_path)
+        logo = cleanup_image(logo, save_image=False)
+        split_logos, boxed_image = split_logo(logo, draw_boxes=True)
 
         # Save each cropped logo
         base_name = logo_path.stem
-        for i, logo in enumerate(logos):
+        for i, logo in enumerate(split_logos):
             output_path = output_dir / f"{base_name}_logo_{i}.png"
             cv2.imwrite(str(output_path), logo)
             print(f"Saved logo {i} to {output_path}")

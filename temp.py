@@ -1,13 +1,18 @@
-from PIL import Image
-import cairosvg
+from pathlib import Path
+import compare_images
+import utils
 
-# Path to the SVG file
-svg_file = "logos/canada/canada_flag.svg"
 
-# Output PNG file
-png_file = "logos/canada/canada_flag.png"
+def main():
+    REFERENCE_IMAGE_PATH = Path("logos/canada/canada_1.png")
+    REFERENCE_IMAGE = utils.load_image(REFERENCE_IMAGE_PATH)
 
-# Convert SVG to PNG
-cairosvg.svg2png(url=svg_file, write_to=png_file, output_width=300)
+    logo = utils.load_image(Path("logos/canada/canada_1.png"))
 
-print(f"Converted {svg_file} to {png_file} with width 300px.")
+    score = compare_images.resnet_similarity(logo, REFERENCE_IMAGE)
+
+    print(f"Score: {score:.4f}")
+
+
+if __name__ == "__main__":
+    main()
