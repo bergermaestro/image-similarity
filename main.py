@@ -1,5 +1,5 @@
 from typing import DefaultDict, Tuple, List
-from cleanup import cleanup_image
+import cleanup
 import compare_images
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -18,7 +18,7 @@ def plot_grouped_scores(grouped_scores: DefaultDict[str, List[Number]]) -> None:
     for (
         group_name,
         scores,
-    ) in grouped_scores.items():  # Use .items() to access keys and values
+    ) in grouped_scores.items():
         only_scores = [score for score in scores]
         plt.hist(only_scores, bins=20, alpha=0.6, label=group_name)
 
@@ -52,16 +52,23 @@ def main():
     for dir_name, logo_paths in logo_dirs:
         for logo_path in logo_paths:
             logo = utils.load_image(logo_path)
-            cleaned_logo = cleanup_image(logo, output_size=(256, 256))
 
-            split_logos, _ = logo_splitter.split_logo(cleaned_logo)
+            logo_with_bg = cleanup.add_white_bg(logo, save_image=False)
+            split_logos, _ = logo_splitter.split_logo(logo_with_bg)
 
             for split_logo in split_logos:
                 # Compare each split logo with the reference image
-                score = compare_images.resnet_similarity(split_logo, REFERENCE_IMAGE)
+                split_logo_fitted = cleanup.fit_to_square(
+                    split_logo, output_size=(256, 256)
+                )
+                score = compare_images.resnet_similarity(
+                    split_logo_fitted, REFERENCE_IMAGE
+                )
                 grouped_scores[dir_name].append(float(score))
 
-            score = compare_images.resnet_similarity(cleaned_logo, REFERENCE_IMAGE)
+            score = compare_images.resnet_similarity(
+                cleanup.cleanup_image(logo), REFERENCE_IMAGE
+            )
             grouped_scores[dir_name].append(float(score))
 
     plot_grouped_scores(grouped_scores)

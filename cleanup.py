@@ -36,3 +36,34 @@ def cleanup_image(image: MatLike, output_size=(256, 256), save_image=False) -> M
         _save_image_fn(img_rgb, f"4_rgb_convert_{id(img)}.png")
 
     return pil_to_cv2(img_rgb)
+
+
+def add_white_bg(image: MatLike, save_image=False) -> MatLike:
+    img = cv2_to_pil(image).convert("RGBA")
+
+    # Create a white background image with the desired output size
+    white_bg = Image.new("RGBA", (img.width, img.height), (255, 255, 255, 255))
+
+    white_bg.paste(img, (0, 0), img)
+    img_rgb = white_bg.convert("RGB")
+
+    if save_image:
+        _save_image_fn(img_rgb, f"5_white_bg_{id(img)}.png")
+
+    return pil_to_cv2(img_rgb)
+
+
+def fit_to_square(image: MatLike, output_size=(256, 256), save_image=False) -> MatLike:
+    img = cv2_to_pil(image).convert("RGBA")
+
+    # Create a white background image with the desired output size
+    white_bg = Image.new("RGBA", output_size, (255, 255, 255, 255))
+
+    # Paste the scaled image onto the white background
+    white_bg.paste(img, (0, 0), img)
+    img_rgb = white_bg.convert("RGB")
+
+    if save_image:
+        _save_image_fn(img_rgb, f"6_constrain_square_{id(img)}.png")
+
+    return pil_to_cv2(img_rgb)
