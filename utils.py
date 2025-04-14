@@ -59,6 +59,21 @@ def load_image(image_path: Path) -> MatLike:
         return arr
 
 
+def import_folder(folder_path: Path) -> list[Path]:
+    """
+    Recursively imports all images from a given folder and its subfolders,
+    returning a list of image paths.
+    """
+    import os
+
+    image_paths = []
+    for root, _, files in os.walk(folder_path):
+        for filename in files:
+            if filename.endswith(".png") or filename.endswith(".jpg"):
+                image_paths.append(Path(root) / filename)
+    return image_paths
+
+
 def save_image(image: MatLike | Image.Image, output_path: Path) -> None:
     """
     Save an image to the specified path.

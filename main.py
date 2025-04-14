@@ -4,32 +4,9 @@ import compare_images
 from pathlib import Path
 import matplotlib.pyplot as plt
 from collections import defaultdict
+import logo_splitter
 import utils
 from torch.types import Number
-
-
-def import_folder(folder_path: Path) -> list[Path]:
-    """
-    Recursively imports all images from a given folder and its subfolders,
-    returning a list of image paths.
-    """
-    import os
-
-    image_paths = []
-    for root, _, files in os.walk(folder_path):
-        for filename in files:
-            if filename.endswith(".png") or filename.endswith(".jpg"):
-                image_paths.append(Path(root) / filename)
-    return image_paths
-
-
-def compute_scores(logos, test_image, method="ssim"):
-    scores = []
-    for logo in logos:
-        score = compare_images.resnet_similarity(logo, test_image)
-        scores.append((score, logo))
-
-    return scores
 
 
 def plot_grouped_scores(grouped_scores: DefaultDict[str, List[Number]]) -> None:
@@ -68,7 +45,7 @@ def main():
     # logo_dirs = ["augmented_canada_logos", "american_airlines"]
     logo_dirs: list[Tuple[str, list[Path]]] = []
     for dir in input_dirs:
-        logo_dirs.append((dir, import_folder(Path("logos") / dir)))
+        logo_dirs.append((dir, utils.import_folder(Path("logos") / dir)))
 
     grouped_scores: DefaultDict[str, List[float]] = defaultdict(list)
 
@@ -76,6 +53,13 @@ def main():
         for logo_path in logo_paths:
             logo = utils.load_image(logo_path)
             cleaned_logo = cleanup_image(logo, output_size=(256, 256))
+
+            split_logos, _ = logo_splitter.split_logo(cleaned_logo)
+
+            for split_logo in split_logos:
+                # Compare each split logo with the reference image
+                score = compare_images.resnet_similarity(split_logo, REFERENCE_IMAGE)
+                grouped_scores[dir_name].append(float(score))
 
             score = compare_images.resnet_similarity(cleaned_logo, REFERENCE_IMAGE)
             grouped_scores[dir_name].append(float(score))
