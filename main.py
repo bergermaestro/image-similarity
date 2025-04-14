@@ -1,4 +1,6 @@
 from typing import DefaultDict, Tuple, List
+
+from matplotlib.pylab import f
 import cleanup
 import compare_images
 from pathlib import Path
@@ -31,7 +33,7 @@ def plot_grouped_scores(grouped_scores: DefaultDict[str, List[Number]]) -> None:
 
 def main():
     REFERENCE_IMAGE_PATH = Path("logos/canada/canada_1.png")
-    REFERENCE_IMAGE = cleanup_image(
+    REFERENCE_IMAGE = cleanup.cleanup_image(
         utils.load_image(REFERENCE_IMAGE_PATH), output_size=(256, 256)
     )
 
@@ -54,7 +56,12 @@ def main():
             logo = utils.load_image(logo_path)
 
             logo_with_bg = cleanup.add_white_bg(logo, save_image=False)
-            split_logos, _ = logo_splitter.split_logo(logo_with_bg)
+            resized_logo = cleanup.fit_to_square(
+                logo_with_bg, output_size=(256, 256), save_image=False
+            )
+            split_logos, _ = logo_splitter.split_logo(resized_logo)
+
+            print(f"Processing {logo_path}..., {len(split_logos)} logos found")
 
             for split_logo in split_logos:
                 # Compare each split logo with the reference image

@@ -4,7 +4,8 @@ import cv2
 import random
 
 from cleanup import cleanup_image
-from utils import load_image
+import cleanup
+from utils import load_image, save_cv2_image
 from cv2.typing import MatLike, Rect
 
 CONTOUR_THRESHOLD = 1000
@@ -85,15 +86,25 @@ def main():
 
     for logo_path in logo_files:
         logo = load_image(logo_path)
-        logo = cleanup_image(logo, save_image=False)
-        split_logos, boxed_image = split_logo(logo, draw_boxes=True)
+
+        logo_with_bg = cleanup.add_white_bg(logo, save_image=False)
+        resized_logo = cleanup.fit_to_square(
+            logo_with_bg, output_size=(256, 256), save_image=False
+        )
+        split_logos, boxed_image = split_logo(resized_logo, draw_boxes=True)
+
+        print(f"Processing {logo_path}..., {len(split_logos)} logos found")
+
+        # logo = cleanup_image(logo, save_image=False)
+        # split_logos, boxed_image = split_logo(logo, draw_boxes=True)
 
         # Save each cropped logo
         base_name = logo_path.stem
         for i, logo in enumerate(split_logos):
             output_path = output_dir / f"{base_name}_logo_{i}.png"
-            cv2.imwrite(str(output_path), logo)
-            print(f"Saved logo {i} to {output_path}")
+
+            logo_fitted = cleanup.fit_to_square(logo, output_size=(256, 256))
+            save_cv2_image(logo_fitted, output_path)
 
         # Save the image with drawn boxes
         boxed_output_path = output_dir / f"{base_name}_boxed_original.png"

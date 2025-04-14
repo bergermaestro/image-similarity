@@ -1,4 +1,5 @@
 from pathlib import Path
+import uuid
 import cv2
 import numpy as np
 from PIL import Image
@@ -57,6 +58,11 @@ def load_image(image_path: Path) -> MatLike:
 
         arr = np.array(img)
         return arr
+
+
+def save_cv2_image(image: MatLike, output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(str(output_path), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
 
 def import_folder(folder_path: Path) -> list[Path]:
