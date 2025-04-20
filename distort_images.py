@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 
 # Directory to save augmented images
-AUGMENTED_DIR = "logos/augmented_canada_logos"
+AUGMENTED_DIR = "sample_logos/augmented_canada_logos"
 if not os.path.exists(AUGMENTED_DIR):
     os.makedirs(AUGMENTED_DIR)
 
@@ -86,7 +86,7 @@ def augment_images(image_paths, num_augmentations=5):
 # Example: Apply augmentations to a selection of images from a folder
 def main():
     # Your logos directory
-    logos_dir = "logos/canada"  # Change this to your actual directory path
+    logos_dir = "sample_logos/canada"  # Change this to your actual directory path
     image_paths = [
         os.path.join(logos_dir, img)
         for img in os.listdir(logos_dir)

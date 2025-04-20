@@ -77,7 +77,7 @@ def test_cv2_to_pil():
 
 
 def test_cleanup_image():
-    REFERENCE_IMAGE_PATH = Path("logos/canada/canada_17.png")
+    REFERENCE_IMAGE_PATH = Path("sample_logos/canada/canada_17.png")
     REFERENCE_IMAGE = cleanup_image(
         load_image(REFERENCE_IMAGE_PATH), output_size=(256, 256), save_image=True
     )

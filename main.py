@@ -32,7 +32,7 @@ def plot_grouped_scores(grouped_scores: DefaultDict[str, List[Number]]) -> None:
 
 
 def main():
-    REFERENCE_IMAGE_PATH = Path("logos/canada/canada_1.png")
+    REFERENCE_IMAGE_PATH = Path("sample_logos/canada/canada_1.png")
     REFERENCE_IMAGE = cleanup.cleanup_image(
         utils.load_image(REFERENCE_IMAGE_PATH), output_size=(256, 256)
     )
@@ -55,6 +55,15 @@ def main():
         for logo_path in logo_paths:
             logo = utils.load_image(logo_path)
 
+            # For checking if Canada flag
+            red_parts = keep_red_parts(logo, output_path=Path(output_path))
+            red_logo_with_bg = cleanup.add_white_bg(red_parts, save_image=False)
+            red_resized_logo = cleanup.fit_to_square(
+                red_logo_with_bg, output_size=(256, 256), save_image=False
+            )
+            red_split_logos, _ = logo_splitter.split_logo(red_resized_logo)
+
+            # For all other logos
             logo_with_bg = cleanup.add_white_bg(logo, save_image=False)
             resized_logo = cleanup.fit_to_square(
                 logo_with_bg, output_size=(256, 256), save_image=False

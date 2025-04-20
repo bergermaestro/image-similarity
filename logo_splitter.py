@@ -8,8 +8,8 @@ import cleanup
 from utils import load_image, save_cv2_image
 from cv2.typing import MatLike, Rect
 
-CONTOUR_THRESHOLD = 1000
-DILATE_ITERATIONS = 2
+CONTOUR_THRESHOLD = 10
+DILATE_ITERATIONS = 3
 # settings for canada logo
 # CONTOUR_THRESHOLD = 1000
 # DILATE_ITERATIONS = 2
@@ -69,7 +69,7 @@ def split_logo(
 
 def main():
     # canada_17.png, canada_6.png
-    canada_logo_dir = Path("logos/canada")
+    canada_logo_dir = Path("sample_logos/canada")
     logo_files = list(canada_logo_dir.glob("*.png"))
 
     output_dir = Path("split_logo")
@@ -89,7 +89,7 @@ def main():
 
         logo_with_bg = cleanup.add_white_bg(logo, save_image=False)
         resized_logo = cleanup.fit_to_square(
-            logo_with_bg, output_size=(256, 256), save_image=False
+            logo_with_bg, output_size=(1024, 1024), save_image=False
         )
         split_logos, boxed_image = split_logo(resized_logo, draw_boxes=True)
 
@@ -100,16 +100,16 @@ def main():
 
         # Save each cropped logo
         base_name = logo_path.stem
-        for i, logo in enumerate(split_logos):
-            output_path = output_dir / f"{base_name}_logo_{i}.png"
+        # for i, logo in enumerate(split_logos):
+        #     output_path = output_dir / f"{base_name}_logo_{i}.png"
 
-            logo_fitted = cleanup.fit_to_square(logo, output_size=(256, 256))
-            save_cv2_image(logo_fitted, output_path)
+        #     logo_fitted = cleanup.fit_to_square(logo, output_size=(256, 256))
+        #     save_cv2_image(logo_fitted, output_path)
 
         # Save the image with drawn boxes
         boxed_output_path = output_dir / f"{base_name}_boxed_original.png"
         if boxed_image is not None:
-            cv2.imwrite(str(boxed_output_path), boxed_image)
+            save_cv2_image(boxed_image, boxed_output_path)
             print(f"Saved boxed image to {boxed_output_path}")
 
 
